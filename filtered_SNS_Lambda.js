@@ -1,6 +1,13 @@
-/* 
+/*
 Lambda function for pushing events from SNS to Slack
 Modified from the Cloudwatch to Slack template and adopted for Dome9  1.19.2017
+
+Variables needed:
+hookUrl - slakc webhook url
+slackChannel - individual channel to post to
+
+Optional variable:
+messageTypeBlacklist - pipe delimited list of message types to NOT post to slack. This is to help reduce noise
 */
 
 'use strict';
@@ -11,14 +18,12 @@ const https = require('https');
 
 // The Slack webhook URL
 const hookUrl = process.env.hookUrl;
+
 // The Slack channel to send a message to stored in the slackChannel environment variable
 const slackChannel = process.env.slackChannel;
 
-// The event types we DON'T want to print
-const messageTypesToFilter = process.env.messageTypesToFilter;
-
-var messageTypes = messageTypesToFilter.split(".");
-
+// The event types we DON'T want to print (split by pipe)
+var messageTypeBlacklist = process.env.messageTypeBlacklistToFilter ? process.env.messageTypeBlacklistToFilter.split("|"): [];
 
 function postMessage(message, callback) {
     const body = JSON.stringify(message);
@@ -50,27 +55,24 @@ function postMessage(message, callback) {
 }
 
 function processEvent(event, callback) {
-   var printMessage = true;
-   var message = event.Records[0].Sns.Message;
-//   message = message.split(",").join("\n"); // you can comment out this line to send the message as a blob
+    var printMessage = true;
+    var message = event.Records[0].Sns.Message;
+    //message = message.split(",").join("\n"); // you can comment out this line to send the message as a blob
+    console.log('From SNS:', message);
 
-   console.log('From SNS:', message);
-    
     const slackMessage = {
         channel: slackChannel,
         text: message
     };
 
-for (var i = 0; i < messageTypes.length; i++){
-    if (message.indexOf(messageTypes[i]) >= 0) {
-        var printMessage = false;
-        console.log("printMessage = " + printMessage + "checked against " + messageTypes[i]);
-    } 
-}
+// Clean up here - http://www.datchley.name/working-with-collections/ array.find()
+    for (var i = 0; i < messageTypeBlacklist.length; i++){
+        if (message.indexOf(messageTypeBlacklist[i]) >= 0) {
+            return; // if the message matches our blacklist - no need to do anything
+        }
+    }
 
-if (printMessage === true) {
-    console.log("Trying to print the message now");
-postMessage(slackMessage, (response) => {
+    postMessage(slackMessage, (response) => {
         if (response.statusCode < 400) {
             console.info('Message posted successfully');
             callback(null);
@@ -82,10 +84,9 @@ postMessage(slackMessage, (response) => {
             callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
         }
     });
-} else { console.log ("printMessage = " + printMessage + " not printing message!");}
-
 }
 
+
 exports.handler = (event, context, callback) => {
-        processEvent(event, callback);
+    processEvent(event, callback);
 };
