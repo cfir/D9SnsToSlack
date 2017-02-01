@@ -9,7 +9,7 @@ const AWS = require('aws-sdk');
 const url = require('url');
 const https = require('https');
 
-// The base-64 encoded, encrypted key (CiphertextBlob) stored in the kmsEncryptedHookUrl environment variable
+// The Slack webhook URL
 const hookUrl = process.env.hookUrl;
 // The Slack channel to send a message to stored in the slackChannel environment variable
 const slackChannel = process.env.slackChannel;
