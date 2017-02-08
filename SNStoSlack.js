@@ -25,7 +25,7 @@ const https = require('https');
 // The Slack webhook URL
 const hookUrl = process.env.hookUrl;
 
-// The Slack channel to send a message to stored in the slackChannel environment variable
+// The Slack channel to send a message to
 const slackChannel = process.env.slackChannel;
 
 // The event types we DON'T want to print (split by pipe)
