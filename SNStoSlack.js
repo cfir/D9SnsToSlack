@@ -1,19 +1,16 @@
+
 /*
 Lambda function for pushing events from SNS to Slack
 Modified from the Cloudwatch to Slack template and adopted for Dome9  1.19.2017
-
 Variables needed:
 hookUrl - slack webhook url
 slackChannel - individual channel to post to
-
 Optional variable:
 messageTypeBlacklist - pipe delimited list of message types to NOT post to slack. This is to help reduce noise
-
 The top 3 most common events you might want to filter are:
 InstanceStateChanged
 InstanceCreatedEvent
 InstanceTagsChangeDetectedEvent
-
 */
 
 'use strict';
@@ -29,7 +26,7 @@ const hookUrl = process.env.hookUrl;
 const slackChannel = process.env.slackChannel;
 
 // The event types we DON'T want to print (split by pipe)
-var messageTypeBlacklist = process.env.messageTypeBlacklist ? process.env.messageTypeBlacklist.split("|"): [];
+const messageTypeBlacklist = process.env.messageTypeBlacklist ? process.env.messageTypeBlacklist.split("|"): [];
 
 function postMessage(message, callback) {
     const body = JSON.stringify(message);
@@ -87,7 +84,6 @@ function processEvent(event, callback) {
         }
     });
 }
-
 
 exports.handler = (event, context, callback) => {
     processEvent(event, callback);
